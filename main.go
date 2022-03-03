@@ -6,6 +6,7 @@ import (
 	"github.com/oddminng/go-blog-service/internal/routers"
 	"github.com/oddminng/go-blog-service/pkg/logger"
 	"github.com/oddminng/go-blog-service/pkg/setting"
+	"github.com/oddminng/go-blog-service/pkg/tracer"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"net/http"
@@ -70,6 +71,18 @@ func setupDBEngine() error {
 	return nil
 }
 
+func setupTracer() error {
+	jaegerTracer, _, err := tracer.NewJaegerTracer(
+		"blog-service",
+		"127.0.0.1:6831",
+	)
+	if err != nil {
+		return err
+	}
+	global.Tracer = jaegerTracer
+	return nil
+}
+
 func init() {
 	var err error
 	err = setupSetting()
@@ -84,6 +97,10 @@ func init() {
 	if err != nil {
 		log.Fatalf("init.setupDBEngine err: %v", err)
 	}
+	err = setupTracer()
+	if err != nil {
+		log.Fatalf("init.setupTracer err: %v", err)
+	}
 }
 
 // @title 博客系统
@@ -91,7 +108,6 @@ func init() {
 // @description Go 语言编程之旅：一起用 Go 做项目
 // @termsOfService https://github.com/oddminng/go-blog-service
 func main() {
-	global.Logger.Infof("%s: go-programming-tour-book/%s", "eddycjy", "blog-service")
 	router := routers.NewRouter()
 	s := &http.Server{
 		Addr:           ":" + global.ServerSetting.HttpPort,
