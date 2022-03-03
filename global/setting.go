@@ -1,9 +1,9 @@
 package global
 
 import (
+	"github.com/jinzhu/gorm"
 	"github.com/oddminng/go-blog-service/pkg/logger"
 	"github.com/oddminng/go-blog-service/pkg/setting"
-	"gorm.io/gorm"
 )
 
 var (
