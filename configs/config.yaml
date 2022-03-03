@@ -4,6 +4,7 @@ Server:
   ReadTimeout: 60
   WriteTimeout: 60
 App:
+  DefaultContextTimeout: 60
   DefaultPageSize: 10
   MaxPageSize: 100
   LogSavePath: storage/logs
@@ -31,3 +32,12 @@ JWT:
   Secret: eddycjy
   Issuer: blog-service
   Expire: 7200 # 秒
+Email:
+  Host: smtp.qq.com
+  Port: 465
+  UserName: xx@qq.com
+  Password: xx
+  IsSSL: true
+  From: xx@qq.com
+  To:
+    - xx@qq.com

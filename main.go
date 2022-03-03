@@ -29,6 +29,7 @@ func setupSetting() error {
 	if err != nil {
 		return err
 	}
+	global.AppSetting.DefaultContextTimeout *= time.Second
 
 	err = s.ReadSection("Database", &global.DatabaseSetting)
 	if err != nil {
@@ -40,6 +41,11 @@ func setupSetting() error {
 		return err
 	}
 	global.JWTSetting.Expire *= time.Second
+
+	err = s.ReadSection("Email", &global.EmailSetting)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
