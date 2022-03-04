@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/oddminng/go-blog-service/global"
 	"github.com/oddminng/go-blog-service/internal/model"
 	"github.com/oddminng/go-blog-service/internal/routers"
@@ -10,11 +11,58 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
+var (
+	port    string
+	runMode string
+	config  string
+)
+
+func init() {
+	var err error
+	err = setupFlag()
+	if err != nil {
+		log.Fatalf("init.setupFlag err: %v", err)
+	}
+	err = setupSetting()
+	if err != nil {
+		log.Fatalf("init.setupSetting err: %v", err)
+	}
+	err = setupLogger()
+	if err != nil {
+		log.Fatalf("init.setupLogger err: %v", err)
+	}
+	err = setupDBEngine()
+	if err != nil {
+		log.Fatalf("init.setupDBEngine err: %v", err)
+	}
+	err = setupTracer()
+	if err != nil {
+		log.Fatalf("init.setupTracer err: %v", err)
+	}
+}
+
+// @title 博客系统
+// @version 1.0
+// @description Go 语言编程之旅：一起用 Go 做项目
+// @termsOfService https://github.com/oddminng/go-blog-service
+func main() {
+	router := routers.NewRouter()
+	s := &http.Server{
+		Addr:           ":" + global.ServerSetting.HttpPort,
+		Handler:        router,
+		ReadTimeout:    global.ServerSetting.ReadTimeout,
+		WriteTimeout:   global.ServerSetting.WriteTimeout,
+		MaxHeaderBytes: 1 << 20,
+	}
+	s.ListenAndServe()
+}
+
 func setupSetting() error {
-	s, err := setting.NewSetting()
+	s, err := setting.NewSetting(strings.Split(config, ",")...)
 	if err != nil {
 		return err
 	}
@@ -25,6 +73,12 @@ func setupSetting() error {
 	}
 	global.ServerSetting.ReadTimeout *= time.Second
 	global.ServerSetting.WriteTimeout *= time.Second
+	if port != "" {
+		global.ServerSetting.HttpPort = port
+	}
+	if runMode != "" {
+		global.ServerSetting.RunMode = runMode
+	}
 
 	err = s.ReadSection("App", &global.AppSetting)
 	if err != nil {
@@ -83,38 +137,11 @@ func setupTracer() error {
 	return nil
 }
 
-func init() {
-	var err error
-	err = setupSetting()
-	if err != nil {
-		log.Fatalf("init.setupSetting err: %v", err)
-	}
-	err = setupLogger()
-	if err != nil {
-		log.Fatalf("init.setupLogger err: %v", err)
-	}
-	err = setupDBEngine()
-	if err != nil {
-		log.Fatalf("init.setupDBEngine err: %v", err)
-	}
-	err = setupTracer()
-	if err != nil {
-		log.Fatalf("init.setupTracer err: %v", err)
-	}
-}
+func setupFlag() error {
+	flag.StringVar(&port, "port", "", "启动端口")
+	flag.StringVar(&runMode, "mode", "", "启动模式")
+	flag.StringVar(&config, "config", "configs/", "指定要使用的配置文件路径")
+	flag.Parse()
 
-// @title 博客系统
-// @version 1.0
-// @description Go 语言编程之旅：一起用 Go 做项目
-// @termsOfService https://github.com/oddminng/go-blog-service
-func main() {
-	router := routers.NewRouter()
-	s := &http.Server{
-		Addr:           ":" + global.ServerSetting.HttpPort,
-		Handler:        router,
-		ReadTimeout:    global.ServerSetting.ReadTimeout,
-		WriteTimeout:   global.ServerSetting.WriteTimeout,
-		MaxHeaderBytes: 1 << 20,
-	}
-	s.ListenAndServe()
+	return nil
 }
